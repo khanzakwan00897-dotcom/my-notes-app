@@ -1,0 +1,234 @@
+
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#2563eb">
+  <title>My Notes App</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #f1f5f9;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .app {
+      max-width: 500px;
+      margin: 20px auto;
+      background: white;
+      padding: 22px;
+      border-radius: 16px;
+      box-shadow: 0 4px 15px #00000015;
+    }
+
+    h1 {
+      text-align: center;
+      color: #2563eb;
+    }
+
+    #noteInput {
+      width: 100%;
+      min-height: 120px;
+      padding: 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 16px;
+      resize: vertical;
+    }
+
+    button {
+      border: none;
+      padding: 11px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 15px;
+      margin-top: 10px;
+    }
+
+    .save-btn {
+      background: #2563eb;
+      color: white;
+      width: 100%;
+    }
+
+    .delete-btn {
+      background: #fee2e2;
+      color: #b91c1c;
+      margin-left: 8px;
+    }
+
+    .note {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 12px;
+      margin-top: 12px;
+      border-radius: 10px;
+      overflow-wrap: anywhere;
+    }
+
+    .note-text {
+      white-space: pre-wrap;
+    }
+
+    .note-date {
+      color: #64748b;
+      font-size: 12px;
+      margin-top: 8px;
+    }
+
+    .note-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .note-header strong {
+      color: #334155;
+    }
+
+    #total {
+      text-align: center;
+      color: #475569;
+      margin-top: 18px;
+    }
+
+    #message {
+      text-align: center;
+      color: #15803d;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <h1>📝 My Notes App 3.0</h1>
+
+    <p>Apne notes yahan likho:</p>
+
+    <textarea
+      id="noteInput"
+      placeholder="Yahan apna note likho..."
+    ></textarea>
+
+    <button class="save-btn" onclick="saveNote()">
+      💾 Save Note
+    </button>
+
+    <p id="message" aria-live="polite"></p>
+
+    <h3>📚 Mere Notes</h3>
+    <div id="notesList"></div>
+
+    <p id="total">Total Notes: 0</p>
+  </div>
+
+  <script>
+    let notes = [];
+
+    try {
+      notes = JSON.parse(localStorage.getItem("myNotes")) || [];
+      if (!Array.isArray(notes)) notes = [];
+    } catch (error) {
+      notes = [];
+    }
+
+    function saveToStorage() {
+      try {
+        localStorage.setItem("myNotes", JSON.stringify(notes));
+        return true;
+      } catch (error) {
+        alert("Notes save nahi ho paye. Browser storage check karo.");
+        return false;
+      }
+    }
+
+    function saveNote() {
+      const input = document.getElementById("noteInput");
+      const text = input.value.trim();
+
+      if (text === "") {
+        alert("Pehle kuch note likho!");
+        return;
+      }
+
+      notes.unshift({
+        id: Date.now() + Math.random(),
+        text: text,
+        date: new Date().toLocaleString("en-IN")
+      });
+
+      if (saveToStorage()) {
+        input.value = "";
+        document.getElementById("message").textContent =
+          "Note successfully save ho gaya!";
+        showNotes();
+      }
+    }
+
+    function deleteNote(id) {
+      if (!confirm("Kya tum ye note delete karna chahte ho?")) {
+        return;
+      }
+
+      const oldNotes = notes;
+      notes = notes.filter(note => note.id !== id);
+
+      if (saveToStorage()) {
+        document.getElementById("message").textContent =
+          "Note delete ho gaya!";
+        showNotes();
+      } else {
+        notes = oldNotes;
+        showNotes();
+      }
+    }
+
+    function showNotes() {
+      const list = document.getElementById("notesList");
+      list.replaceChildren();
+
+      notes.forEach(note => {
+        const card = document.createElement("div");
+        card.className = "note";
+
+        const header = document.createElement("div");
+        header.className = "note-header";
+
+        const title = document.createElement("strong");
+        title.textContent = "📌 Note";
+
+        const deleteButton = document.createElement("button");
+        deleteButton.className = "delete-btn";
+        deleteButton.textContent = "Delete";
+        deleteButton.onclick = () => deleteNote(note.id);
+
+        header.append(title, deleteButton);
+
+        const text = document.createElement("p");
+        text.className = "note-text";
+        text.textContent = note.text;
+
+        const date = document.createElement("div");
+        date.className = "note-date";
+        date.textContent = note.date || "";
+
+        card.append(header, text, date);
+        list.appendChild(card);
+      });
+
+      document.getElementById("total").textContent =
+        "Total Notes: " + notes.length;
+    }
+
+    showNotes();
+  </script>
+</body>
+</html>
